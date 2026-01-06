@@ -2,10 +2,8 @@ name: Build Arch Package
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch: # يسمح لك بتشغيل البناء يدوياً
+    branches: [ main, master ] # يعمل على كلا الاسمين لضمان التشغيل
+  workflow_dispatch: 
 
 jobs:
   build:
@@ -15,10 +13,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build PKGBUILD
-        uses: 2ndndnd/arch-makepkg-action@v3
+        uses: arch-actions/run-makepkg@v1
         with:
-          # إذا كان ملف PKGBUILD في المجلد الرئيسي، اتركها كما هي
-          pkgdir: . 
+          # إذا كان الملف في المجلد الرئيسي اتركه كما هو
+          # إذا كان في مجلد فرعي اكتب اسمه هنا
+          path: . 
 
       - name: Upload Package Artifact
         uses: actions/upload-artifact@v4
