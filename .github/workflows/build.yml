@@ -2,22 +2,35 @@ name: Build Arch Package
 
 on:
   push:
-    branches: [ main, master ] # يعمل على كلا الاسمين لضمان التشغيل
-  workflow_dispatch: 
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # نستخدم حاوية آرتش لينكس الرسمية مباشرة
+    container:
+      image: archlinux:latest
+
     steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm base-devel git
+
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build PKGBUILD
-        uses: arch-actions/run-makepkg@v1
-        with:
-          # إذا كان الملف في المجلد الرئيسي اتركه كما هو
-          # إذا كان في مجلد فرعي اكتب اسمه هنا
-          path: . 
+      - name: Fix permissions for makepkg
+        run: |
+          # آرتش تمنع تشغيل makepkg كمسؤول (root) لذا ننشئ مستخدم عادي
+          useradd -m builduser
+          chown -R builduser:builduser .
+          echo "builduser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+      - name: Build Package
+        run: |
+          # تشغيل البناء كالمستخدم الذي أنشأناه
+          sudo -u builduser makepkg -s --noconfirm
 
       - name: Upload Package Artifact
         uses: actions/upload-artifact@v4
